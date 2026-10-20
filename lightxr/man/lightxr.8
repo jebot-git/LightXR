@@ -1,0 +1,46 @@
+.TH LIGHTXR 8 "2026-10-20" "de-xr" "System Administration"
+.SH NAME
+lightxr \- display manager with a local and OpenXR login greeter
+.SH SYNOPSIS
+.nf
+lightxr [OPTIONS]
+.fi
+.SH DESCRIPTION
+A LightDM fork that authenticates through PAM and launches desktop sessions, including DomeD. Its Qt greeter uses a separate OpenXR presenter. A privileged broker connects the greeter to already\-running trusted XR runtimes. Authentication remains in the display manager. Installation and service activation are separate operations.
+.SH OPTIONS
+.TP
+.B "\-\-config FILE"
+Use the specified display\-manager configuration file.
+.TP
+.B "\-\-show\-config"
+Show the merged configuration and exit.
+.TP
+.B "\-\-debug"
+Print debugging messages.
+.TP
+.B "\-\-test\-mode"
+Run unprivileged, skipping operations requiring root.
+.TP
+.B "\-\-pid\-file FILE"
+Choose the PID file.
+.TP
+.B "\-\-log\-dir DIRECTORY"
+Choose the log directory.
+.TP
+.B "\-\-run\-dir DIRECTORY"
+Choose the runtime\-state directory.
+.TP
+.B "\-\-cache\-dir DIRECTORY"
+Choose the cache directory.
+.TP
+.B "\-\-version"
+Show version.
+.TP
+.B "\-\-help"
+Show options.
+.SH FILES
+/etc/lightxr/lightdm.conf configures the display manager. /etc/lightxr/broker.json configures trusted XR server owners and runtime connections. /etc/pam.d/lightxr and /etc/pam.d/lightxr\-greeter define authentication policies. /run/lightxr\-broker/bridge.sock is the default broker socket.
+.SH SERVICES
+lightxr.service runs the display manager; lightxr\-broker.service runs the trusted\-runtime broker. Review the distribution\-specific PAM policy and installation guide before selecting LightXR as the next\-boot display manager.
+.SH SEE ALSO
+lightxr\-greeter(1), dome\-compositor(1), pam(8)

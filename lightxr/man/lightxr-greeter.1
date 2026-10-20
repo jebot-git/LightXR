@@ -1,0 +1,26 @@
+.TH LIGHTXR-GREETER 1 "2026-10-20" "de-xr" "User Commands"
+.SH NAME
+lightxr\-greeter \- local and OpenXR display\-manager greeter
+.SH SYNOPSIS
+.nf
+/usr/local/libexec/lightxr/lightxr\-greeter [OPTIONS]
+.fi
+.SH DESCRIPTION
+Show the Qt login interface. In production the display manager supplies the authentication channel. The broker and presenter provide a curved XR panel about two metres ahead, controller pointing and an on\-screen keyboard.
+.SH OPTIONS
+.TP
+.B "\-\-demo"
+Preview without a LightDM/PAM connection. Authentication is disabled.
+.TP
+.B "\-\-windowed"
+Use a window rather than the default fullscreen local view.
+.TP
+.B "\-\-bridge PATH"
+Select the seat broker socket; default /run/lightxr\-broker/bridge.sock.
+.TP
+.B "\-\-help"
+Show options.
+.SH EXAMPLES
+\&./build/lightxr\-greeter \-\-demo \-\-windowed
+.SH SEE ALSO
+lightxr(8)

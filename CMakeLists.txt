@@ -77,3 +77,7 @@ if(BUILD_TESTING)
  set_tests_properties(greeter-protocol PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
  add_test(NAME daemon-defaults COMMAND lightxr --config=${CMAKE_CURRENT_BINARY_DIR}/lightdm.conf --show-config)
 endif()
+
+install(FILES lightxr/man/lightxr-greeter.1 DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+
+install(FILES lightxr/man/lightxr.8 DESTINATION ${CMAKE_INSTALL_MANDIR}/man8)
