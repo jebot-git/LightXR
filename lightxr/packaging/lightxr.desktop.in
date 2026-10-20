@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LightXR
+Comment=Local and curved OpenXR login greeter
+Exec=@CMAKE_INSTALL_FULL_LIBEXECDIR@/lightxr/lightxr-greeter
+Type=Application
+X-LightDM-Session-Type=x

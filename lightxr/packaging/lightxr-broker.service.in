@@ -1,0 +1,26 @@
+[Unit]
+Description=LightXR greeter seat and XR runtime broker
+After=systemd-user-sessions.service
+Before=lightxr.service
+[Service]
+Type=simple
+User=root
+Group=lightxr
+ExecStart=/usr/bin/python3 @CMAKE_INSTALL_FULL_LIBEXECDIR@/lightxr/lightxr-broker.py --presenter @CMAKE_INSTALL_FULL_LIBEXECDIR@/lightxr/lightxr-presenter
+Restart=on-failure
+RuntimeDirectory=lightxr-broker
+RuntimeDirectoryMode=0750
+KillMode=control-group
+TimeoutStopSec=5
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+NoNewPrivileges=yes
+RestrictSUIDSGID=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+ReadWritePaths=/run/lightxr-broker
+[Install]
+WantedBy=multi-user.target

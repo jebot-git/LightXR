@@ -582,14 +582,14 @@ main (int argc, char **argv)
 #endif
     loop = g_main_loop_new (NULL, FALSE);
 
-    GList *messages = g_list_append (NULL, g_strdup_printf ("Starting Light Display Manager %s, UID=%i PID=%i", VERSION, getuid (), getpid ()));
+    GList *messages = g_list_append (NULL, g_strdup_printf ("Starting LightXR Display Manager %s, UID=%i PID=%i", VERSION, getuid (), getpid ()));
 
     g_signal_connect (process_get_current (), PROCESS_SIGNAL_GOT_SIGNAL, G_CALLBACK (signal_cb), NULL);
 
     g_autoptr(GOptionContext) option_context = g_option_context_new (/* Arguments and description for --help test */
                                                                      _("- Display Manager"));
     gboolean test_mode = FALSE;
-    gchar *pid_path = "/var/run/lightdm.pid";
+    gchar *pid_path = "/run/lightxr/lightxr.pid";
     gchar *log_dir = NULL;
     gchar *run_dir = NULL;
     gchar *cache_dir = NULL;
@@ -702,7 +702,7 @@ main (int argc, char **argv)
     if (show_version)
     {
         /* NOTE: Is not translated so can be easily parsed */
-        g_printerr ("lightdm %s\n", VERSION);
+        g_printerr ("LightXR %s\n", VERSION);
         return EXIT_SUCCESS;
     }
 

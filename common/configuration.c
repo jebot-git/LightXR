@@ -13,6 +13,10 @@
 
 #include "configuration.h"
 
+#ifndef CONFIG_NAMESPACE
+#define CONFIG_NAMESPACE "lightdm"
+#endif
+
 struct ConfigurationPrivate
 {
     gchar *dir;
@@ -173,7 +177,7 @@ load_config_directories (const gchar * const *dirs, GList **messages)
     /* Load in reverse order, because XDG_* fields are preference-ordered and the directories in front should override directories in back. */
     for (gint i = g_strv_length ((gchar **)dirs) - 1; i >= 0; i--)
     {
-        g_autofree gchar *full_dir = g_build_filename (dirs[i], "lightdm", "lightdm.conf.d", NULL);
+        g_autofree gchar *full_dir = g_build_filename (dirs[i], CONFIG_NAMESPACE, "lightdm.conf.d", NULL);
         if (messages)
             *messages = g_list_append (*messages, g_strdup_printf ("Loading configuration dirs from %s", full_dir));
         load_config_directory (full_dir, messages);

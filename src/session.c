@@ -622,8 +622,10 @@ session_real_start (Session *session)
     if (priv->pid == 0)
     {
         /* Run us again in session child mode */
-        execlp ("lightdm",
-                "lightdm",
+        /* Re-execute this fork's trusted binary, never another display manager
+         * resolved through PATH. LightXR targets Linux/logind. */
+        execl ("/proc/self/exe",
+                "lightxr",
                 "--session-child",
                 arg0, arg1, NULL);
         _exit (EXIT_FAILURE);

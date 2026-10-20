@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+"""LightDM supplies a desktop Exec command as one argument; parse it without a shell."""
+import os
+import shlex
+import sys
+if len(sys.argv) != 2:
+    raise SystemExit('LightXR: expected one desktop session command')
+command = shlex.split(sys.argv[1])
+if not command:
+    raise SystemExit('LightXR: no session command')
+os.execvp(command[0], command)

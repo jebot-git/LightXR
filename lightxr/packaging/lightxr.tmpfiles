@@ -1,0 +1,5 @@
+d /var/lib/lightxr 0750 lightxr lightxr -
+d /var/lib/lightxr/data 0750 lightxr lightxr -
+d /var/cache/lightxr 0750 lightxr lightxr -
+d /var/log/lightxr 0750 root lightxr -
+d /var/empty/lightxr 0755 root root -

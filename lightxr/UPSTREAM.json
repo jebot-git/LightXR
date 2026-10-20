@@ -1,0 +1,7 @@
+{
+  "project": "LightDM",
+  "repository": "https://github.com/ubuntu/lightdm",
+  "commit": "db139d566253d5dfef6ccf8c1379be9670cebcb2",
+  "fork": "LightXR",
+  "wivrn_pro_reviewed_commit": "3b7a6c827f94d13599d0554d89cd69bebd321bac"
+}

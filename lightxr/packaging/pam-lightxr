@@ -1,0 +1,18 @@
+#%PAM-1.0
+# Debian/Ubuntu: use the host's configured providers, MFA, and logind session stack.
+auth requisite pam_nologin.so
+auth required pam_succeed_if.so user != root quiet_success
+@include common-auth
+-auth optional pam_kwallet5.so
+@include common-account
+@include common-password
+session [success=ok ignore=ignore module_unknown=ignore default=bad] pam_selinux.so close
+session optional pam_keyinit.so force revoke
+session required pam_limits.so
+session required pam_loginuid.so
+@include common-session
+session [success=ok ignore=ignore module_unknown=ignore default=bad] pam_selinux.so open
+-session optional pam_kwallet5.so auto_start
+# pam_env runs last, matching the installed SDDM → DomeD environment contract.
+session required pam_env.so
+session required pam_env.so envfile=/etc/default/locale user_readenv=1

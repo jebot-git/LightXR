@@ -1,0 +1,11 @@
+#pragma once
+#define VERSION "1.33.1-lightxr-@PROJECT_VERSION@"
+#define GETTEXT_PACKAGE "lightdm"
+#define DEFAULT_USER_SESSION "dome"
+#define DEFAULT_GREETER_SESSION "lightxr"
+#define GREETER_USER "lightxr"
+#define HAVE_SETRESGID 1
+#define HAVE_SETRESUID 1
+#define HAVE_CLEARENV 1
+#define HAVE_SETUSERCONTEXT 0
+#define HAVE_LIBAUDIT 0

@@ -179,7 +179,7 @@ dnl ###########################################################################
 dnl Configurable values
 dnl ###########################################################################
 
-DEFAULT_USER_SESSION=default
+DEFAULT_USER_SESSION=dome
 AC_ARG_WITH(user-session,
             AS_HELP_STRING(--with-user-session=<name>,
                            Session to use for user accounts),
@@ -190,7 +190,7 @@ AC_ARG_WITH(user-session,
 AC_SUBST(DEFAULT_USER_SESSION)
 AC_DEFINE_UNQUOTED(DEFAULT_USER_SESSION, "$DEFAULT_USER_SESSION", User session)
 
-DEFAULT_GREETER_SESSION=default
+DEFAULT_GREETER_SESSION=lightxr
 AC_ARG_WITH(greeter-session,
             AS_HELP_STRING(--with-greeter-session=<session>,
                            Greeter session),
@@ -201,7 +201,7 @@ AC_ARG_WITH(greeter-session,
 AC_SUBST(DEFAULT_GREETER_SESSION)
 AC_DEFINE_UNQUOTED(DEFAULT_GREETER_SESSION, "$DEFAULT_GREETER_SESSION", Greeter session)
 
-GREETER_USER=lightdm
+GREETER_USER=lightxr
 AC_ARG_WITH(greeter-user,
             AS_HELP_STRING(--with-greeter-user=<username>,
                            User to run greeter as),

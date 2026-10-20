@@ -1,0 +1,16 @@
+[Unit]
+Description=LightXR display manager (LightDM fork)
+Documentation=file:@CMAKE_INSTALL_FULL_DOCDIR@/README.md
+After=systemd-user-sessions.service plymouth-quit.service lightxr-broker.service
+Wants=lightxr-broker.service
+Conflicts=getty@tty1.service
+[Service]
+ExecStart=@CMAKE_INSTALL_FULL_SBINDIR@/lightxr --config=/etc/lightxr/lightdm.conf
+Restart=on-failure
+BusName=org.freedesktop.DisplayManager
+KillMode=mixed
+RuntimeDirectory=lightxr
+RuntimeDirectoryMode=0755
+TimeoutStopSec=30
+[Install]
+Alias=display-manager.service

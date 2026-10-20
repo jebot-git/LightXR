@@ -1,0 +1,9 @@
+{
+  "allow_users": [],
+  "runtimes": [
+    {"manifest": "/usr/local/share/openxr/1/openxr_wivrn_pro.json", "socket": "wivrn/comp_ipc"},
+    {"manifest": "/usr/share/openxr/1/openxr_wivrn_pro.json", "socket": "wivrn/comp_ipc"},
+    {"manifest": "/usr/share/openxr/1/openxr_wivrn.json", "socket": "wivrn/comp_ipc"},
+    {"manifest": "/usr/share/openxr/1/openxr_monado.json", "socket": "monado_comp_ipc"}
+  ]
+}

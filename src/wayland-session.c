@@ -45,6 +45,12 @@ wayland_session_set_vt (WaylandSession *session, gint vt)
     }
 }
 
+static const gchar *
+wayland_session_get_session_type (DisplayServer *server)
+{
+    return "wayland";
+}
+
 static gint
 wayland_session_get_vt (DisplayServer *server)
 {
@@ -59,6 +65,14 @@ wayland_session_connect_session (DisplayServer *display_server, Session *session
     WaylandSession *wayland_session = WAYLAND_SESSION (display_server);
     WaylandSessionPrivate *priv = wayland_session_get_instance_private (wayland_session);
 
+    /* A native compositor owns its display. Never inherit the greeter's X11
+     * connection or a previous Wayland session's socket. DomeD validates this. */
+    session_unset_env (session, "DISPLAY");
+    session_unset_env (session, "WAYLAND_DISPLAY");
+    session_unset_env (session, "WAYLAND_SOCKET");
+    session_unset_env (session, "XAUTHORITY");
+    session_set_xdisplay (session, NULL);
+    session_set_x_authority (session, NULL, FALSE);
     session_set_env (session, "XDG_SESSION_TYPE", "wayland");
 
     if (priv->vt >= 0)
@@ -67,7 +81,7 @@ wayland_session_connect_session (DisplayServer *display_server, Session *session
         session_set_env (session, "XDG_VTNR", value);
         
         g_autofree gchar *tty_text = NULL;
-        tty_text = g_strdup_printf("/dev/tty/%d",priv->vt);
+        tty_text = g_strdup_printf("/dev/tty%d",priv->vt);
         session_set_tty(session,tty_text);
     }
 }
@@ -104,6 +118,7 @@ wayland_session_class_init (WaylandSessionClass *klass)
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     DisplayServerClass *display_server_class = DISPLAY_SERVER_CLASS (klass);
 
+    display_server_class->get_session_type = wayland_session_get_session_type;
     display_server_class->get_vt = wayland_session_get_vt;
     display_server_class->connect_session = wayland_session_connect_session;
     display_server_class->disconnect_session = wayland_session_disconnect_session;
