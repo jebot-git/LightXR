@@ -51,7 +51,7 @@ install(TARGETS lightxr-greeter lightxr-presenter RUNTIME DESTINATION ${CMAKE_IN
 install(PROGRAMS lightxr/broker/lightxr-broker.py lightxr/packaging/lightxr-session DESTINATION ${CMAKE_INSTALL_LIBEXECDIR}/lightxr)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lightxr.desktop" DESTINATION ${CMAKE_INSTALL_DATADIR}/xgreeters)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lightdm.conf" lightxr/packaging/broker.json data/users.conf data/keys.conf DESTINATION /etc/lightxr)
-install(FILES data/org.freedesktop.DisplayManager.conf DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/system.d)
+install(FILES data/org.freedesktop.DisplayManager.conf DESTINATION /etc/dbus-1/system.d RENAME lightxr.conf)
 install(FILES lightxr/packaging/pam-lightxr DESTINATION /etc/pam.d RENAME lightxr)
 install(FILES data/pam/lightdm-greeter DESTINATION /etc/pam.d RENAME lightxr-greeter)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lightxr.service" "${CMAKE_CURRENT_BINARY_DIR}/lightxr-broker.service" DESTINATION ${CMAKE_INSTALL_LIBDIR}/systemd/system)

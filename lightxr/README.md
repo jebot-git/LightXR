@@ -44,6 +44,12 @@ portal/toolkit services and logout supervisor. LightXR supplies PAM credentials
 and the same locale/KWallet hooks as the installed SDDM policy. It does not replace
 DomeD's launcher, compositor, session services, user settings or environment choices.
 
+The installer places its system D-Bus policy in `/etc/dbus-1/system.d`, which is
+loaded even when binaries use `/usr/local`. It sets public directory permissions
+explicitly so DomeD's restrictive session umask cannot prevent the greeter account
+from starting. On Ubuntu it also exposes the distribution's PAM KWallet helper at
+the libexec path used by older installed DomeD launchers.
+
 The runtime needs `xserver-xorg-core`, `xserver-xorg-input-libinput` and
 `libpam-systemd` for the greeter's physical seat and DomeD installed
 at `/usr/local/bin/dome-session`. DomeD itself runs as a Wayland user session.

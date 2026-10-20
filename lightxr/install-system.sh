@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Install a prepared, tested tree. Never compile or stop a login session as root.
 set -euo pipefail
+umask 022
 [[ $(id -u) -eq 0 ]] || { echo "Use sudo $0 --xr-user USER" >&2; exit 1; }
 root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 stage="$root/build/system-stage"
@@ -22,6 +23,11 @@ python3 "$root/lightxr/tests/validate_stage.py" "$stage"
 exec 9>/run/lock/lightxr-install.lock
 flock -x 9
 backup="/var/backups/lightxr/$(date +%Y%m%d-%H%M%S)"
+# DomeD sessions use umask 077. Directory traversal must still be available to
+# the dedicated greeter UID and to systemd's unprivileged configuration readers.
+while IFS= read -r -d '' relative; do
+    install -d -m 0755 -o root -g root -- "/${relative#./}"
+done < <(cd "$stage" && find usr etc -type d -print0)
 while IFS= read -r -d '' relative; do
     target="/${relative#./}"
     if [[ -e "$target" || -L "$target" ]]; then
@@ -41,6 +47,13 @@ tmp=p.with_suffix('.new');tmp.write_text(json.dumps(config,indent=2)+'\n');tmp.c
 PY
 systemd-sysusers /usr/local/lib/sysusers.d/lightxr.conf
 systemd-tmpfiles --create /usr/local/lib/tmpfiles.d/lightxr.conf
+# Ubuntu ships this helper in /usr/share; the installed DomeD launcher uses
+# the upstream libexec path. Preserve the PAM wallet handoff outside Plasma.
+if [[ ! -e /usr/libexec/pam_kwallet_init && -x /usr/share/libpam-kwallet-common/pam_kwallet_init ]]; then
+    install -d -m 0755 /usr/libexec
+    ln -s /usr/share/libpam-kwallet-common/pam_kwallet_init /usr/libexec/pam_kwallet_init
+fi
+systemctl reload dbus.service
 systemctl daemon-reload
 if $enable; then
     systemctl enable lightxr.service --force

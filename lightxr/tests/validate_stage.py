@@ -8,13 +8,18 @@ required=['sbin/lightxr','libexec/lightxr/lightxr-greeter','libexec/lightxr/ligh
           'libexec/lightxr/lightxr-broker.py','libexec/lightxr/lightxr-session',
           'share/xgreeters/lightxr.desktop',
           'lib/systemd/system/lightxr.service','lib/systemd/system/lightxr-broker.service',
-          'lib/sysusers.d/lightxr.conf','lib/tmpfiles.d/lightxr.conf','share/dbus-1/system.d/org.freedesktop.DisplayManager.conf']
+          'lib/sysusers.d/lightxr.conf','lib/tmpfiles.d/lightxr.conf']
 for name in required:
     path=prefix/name
     assert path.is_file() and not path.is_symlink(),name
     if name.startswith(('sbin/','libexec/')):assert path.stat().st_mode&0o111,name
     assert not path.stat().st_mode&0o022,name
+    parent=path.parent
+    while root==Path('/') and parent!=root:
+        assert parent.stat().st_mode&0o005==0o005, f'Greeter cannot traverse {parent}'
+        parent=parent.parent
 conf=configparser.ConfigParser(interpolation=None);conf.read(root/'etc/lightxr/lightdm.conf')
+assert (root/'etc/dbus-1/system.d/lightxr.conf').is_file(), 'System D-Bus must load the display-manager policy even with a /usr/local prefix'
 assert conf['Seat:*']['user-session']=='dome' and conf['Seat:*']['greeter-session']=='lightxr'
 assert conf['Seat:*']['greeter-user']=='lightxr' and conf['Seat:*']['allow-guest']=='false'
 assert conf['Seat:*']['pam-service']=='lightxr' and 'autologin-user' not in conf['Seat:*']
