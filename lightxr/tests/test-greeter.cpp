@@ -38,6 +38,12 @@ int main(int argc,char** argv)try{
         }
     });
     Greeter window(false,endpoint);window.show();
+    require(!QFontDatabase::isSmoothlyScalable(window.font().family(), window.font().styleName()), "Greeter must use the bundled bitmap face");
+    require(QFontInfo(window.font()).pixelSize() == 16, "Greeter must use the native 16 px strike");
+    for (auto widget : window.findChildren<QWidget*>()) {
+        require(QFontInfo(widget->font()).family() == QFontInfo(window.font()).family(), "Greeter controls must inherit the bitmap family");
+        require(QFontInfo(widget->font()).pixelSize() == 16, "Greeter controls must retain the native bitmap strike");
+    }
     auto username=window.findChild<QLineEdit*>("username"),answer=window.findChild<QLineEdit*>("response");auto submit=window.findChild<QPushButton*>("submit");
     wait([&]{return username->isEnabled()&&peer;});require(username->text()=="alice","Selected user hint");
     QTest::mouseMove(username,username->rect().center());

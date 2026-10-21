@@ -152,3 +152,12 @@ greeter, broker and presenter work is GPL-3.0-or-later. `src/graphics.cpp` and
 `src/graphics.hpp` adapt Ghostty XR's MIT-licensed windowless EGL context helper;
 its notice is retained in `COPYING.graphics`. The background's provenance and
 wordmark information are in `assets/README.md`.
+
+### Bitmap interface font
+
+The local and XR greeter use the bundled GNU Unifont 17.0.04 bitmap face at its
+native 16 px strike, including account fields, prompts, buttons and the on-screen
+keyboard. The font is embedded in the greeter, so it does not depend on a user's
+DomeD session, Fontconfig settings or home directory. Text is not resized or
+synthetically emboldened. Font licensing and provenance are installed in the
+LightXR documentation's `fonts` directory.

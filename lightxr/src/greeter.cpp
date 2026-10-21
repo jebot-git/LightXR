@@ -6,6 +6,7 @@ extern "C" {
 #include <QtNetwork/QLocalSocket>
 #include <QtCore/QtEndian>
 #include <deque>
+#include "bitmap-font.h"
 
 static constexpr int Width=1280, Height=800;
 static QByteArray packet(const QByteArray& data) {
@@ -134,27 +135,29 @@ protected:
     }
 public:
     Greeter(bool preview,const QString& endpoint):demo(preview),bridgePath(endpoint) {
-        setWindowTitle("LightXR");setStyleSheet("QWidget{background:#111923;color:#edf3fb;font:20px 'DejaVu Sans';} QLabel{background:transparent;} QLineEdit{background:#202f41;border:1px solid #47617e;border-radius:10px;padding:12px;selection-background-color:#558bbd;} QLineEdit:focus{border:2px solid #94c9ff;} QPushButton{background:#24364b;border:1px solid #405a76;border-radius:9px;padding:10px;} QPushButton:hover{background:#34516f;} QPushButton:pressed{background:#446b94;} QPushButton:disabled{color:#76879b;} QPushButton#submit{background:#97caff;color:#0e1c2c;font-weight:600;}");
+        QApplication::setFont(lightxrBitmapFont());
+        setFont(lightxrBitmapFont());
+        setWindowTitle("LightXR");setStyleSheet("QWidget{background:#111923;color:#edf3fb;} QLabel{background:transparent;} QLineEdit{background:#202f41;border:1px solid #47617e;border-radius:10px;padding:12px;selection-background-color:#558bbd;} QLineEdit:focus{border:2px solid #94c9ff;} QPushButton{background:#24364b;border:1px solid #405a76;border-radius:9px;padding:10px;} QPushButton:hover{background:#34516f;} QPushButton:pressed{background:#446b94;} QPushButton:disabled{color:#76879b;} QPushButton#submit{background:#97caff;color:#0e1c2c;}");
         root=new Background(this);root->setFixedSize(Width,Height);root->setObjectName("greeterPanel");
         auto outer=new QVBoxLayout(this);outer->setContentsMargins(0,0,0,0);outer->addWidget(root,0,Qt::AlignCenter);
         auto layout=new QVBoxLayout(root);layout->setContentsMargins(56,36,56,28);layout->setSpacing(14);
         auto header=new QHBoxLayout;
-        auto brand=new QLabel("LightXR");brand->setStyleSheet("font-size:36px;font-weight:600;color:#aed4ff;");header->addWidget(brand);header->addStretch();
-        xrStatus=new QLabel("Local display · XR ready on connection");xrStatus->setStyleSheet("font-size:16px;color:#a5b8ce;");header->addWidget(xrStatus);layout->addLayout(header);
+        auto brand=new QLabel("LightXR");brand->setStyleSheet("color:#aed4ff;");header->addWidget(brand);header->addStretch();
+        xrStatus=new QLabel("Local display · XR ready on connection");xrStatus->setStyleSheet("color:#a5b8ce;");header->addWidget(xrStatus);layout->addLayout(header);
         auto body=new QHBoxLayout;body->setSpacing(60);
         auto welcome=new QVBoxLayout;welcome->addStretch(3);
-        auto title=new QLabel("Welcome to DomeD.");title->setStyleSheet("font-size:30px;font-weight:500;");welcome->addWidget(title);
-        auto subtitle=new QLabel("Sign in to DomeD\nWayland desktop + native XR");subtitle->setStyleSheet("font-size:21px;color:#a9bed5;");welcome->addWidget(subtitle);welcome->addSpacing(12);body->addLayout(welcome,1);
+        auto title=new QLabel("Welcome to DomeD.");title->setStyleSheet("");welcome->addWidget(title);
+        auto subtitle=new QLabel("Sign in to DomeD\nWayland desktop + native XR");subtitle->setStyleSheet("color:#a9bed5;");welcome->addWidget(subtitle);welcome->addSpacing(12);body->addLayout(welcome,1);
         auto card=new QWidget;card->setObjectName("loginCard");card->setStyleSheet("QWidget#loginCard{background:#111923;border-radius:14px;}");
         auto form=new QVBoxLayout(card);form->setContentsMargins(20,10,20,10);form->setSpacing(10);
         form->addWidget(new QLabel("Account"));username=new QLineEdit;username->setObjectName("username");username->setPlaceholderText("Username");username->setMaxLength(128);username->setContextMenuPolicy(Qt::NoContextMenu);form->addWidget(username);
-        promptLabel=new QLabel("Your password will be requested securely.");promptLabel->setWordWrap(true);promptLabel->setStyleSheet("font-size:16px;color:#b7c8db;");form->addWidget(promptLabel);
+        promptLabel=new QLabel("Your password will be requested securely.");promptLabel->setWordWrap(true);promptLabel->setStyleSheet("color:#b7c8db;");form->addWidget(promptLabel);
         answer=new QLineEdit;answer->setObjectName("response");answer->setEchoMode(QLineEdit::Password);answer->setMaxLength(256);answer->setContextMenuPolicy(Qt::NoContextMenu);answer->setEnabled(false);form->addWidget(answer);
         auto sessionRow=new QHBoxLayout;sessionRow->addWidget(new QLabel("Session"));sessionLabel=new QLabel("DomeD");sessionLabel->setObjectName("session");sessionRow->addWidget(sessionLabel);sessionRow->addStretch();
         sessionButton=new QPushButton("Change");sessionButton->setFocusPolicy(Qt::NoFocus);sessionRow->addWidget(sessionButton);form->addLayout(sessionRow);
         submit=new QPushButton("Sign in");submit->setObjectName("submit");form->addWidget(submit);
         auto cancel=new QPushButton("Cancel authentication");cancel->setFocusPolicy(Qt::NoFocus);form->addWidget(cancel);
-        message=new QLabel;message->setObjectName("status");message->setWordWrap(true);message->setMinimumHeight(52);message->setStyleSheet("font-size:16px;color:#b4cce6;");form->addWidget(message);body->addWidget(card,1);layout->addLayout(body,1);
+        message=new QLabel;message->setObjectName("status");message->setWordWrap(true);message->setMinimumHeight(52);message->setStyleSheet("color:#b4cce6;");form->addWidget(message);body->addWidget(card,1);layout->addLayout(body,1);
         auto keyboard=new QVBoxLayout;keyboard->setSpacing(7);
         for(auto row:{QString("`1234567890-="),QString("qwertyuiop[]"),QString("asdfghjkl;'"),QString("zxcvbnm,./\\")}) {
             auto line=new QHBoxLayout;line->setSpacing(6);

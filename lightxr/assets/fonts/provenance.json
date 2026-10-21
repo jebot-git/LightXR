@@ -1,0 +1,9 @@
+{
+  "project": "GNU Unifont",
+  "version": "17.0.04",
+  "source": "https://unifoundry.com/unifont/",
+  "file": "unifont-17.0.04.pcf",
+  "sha256": "0a647e97d8cbe9584412233306b8874facc5c77da62fce515e8e92325e945805",
+  "license": "GPL-2.0-or-later with font embedding exception; see COPYING.unifont",
+  "origin": "Same pinned font asset used by DomeD; bundled independently for the pre-login greeter."
+}
