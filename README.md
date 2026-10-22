@@ -18,13 +18,15 @@ See the [dependency list and build instructions](lightxr/README.md) first.
 The `lightxr` branch contains the fork; upstream history is preserved.
 
 ```sh
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+export DE_XR_FLTK_PREFIX=/path/to/patched-fltk-1.4.5
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$DE_XR_FLTK_PREFIX"
 cmake --build build
 ./build/lightxr-greeter --demo --windowed
 ```
 
 The demo previews the interface without authentication. Production uses
-`lightxr` (the display manager), `lightxr-greeter` (Qt UI),
+`lightxr` (the display manager), `lightxr-greeter` (FLTK UI by default),
 `lightxr-presenter` (OpenXR) and `lightxr-broker.py` (trusted runtime bridge).
 
 ## System installation
@@ -32,7 +34,8 @@ The demo previews the interface without authentication. Production uses
 Install DomeD first, then follow the full guide to prepare and validate the stage:
 
 ```sh
-./lightxr/stage.sh
+./lightxr/stage.sh -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$DE_XR_FLTK_PREFIX"
 sudo ./lightxr/install-system.sh --xr-user YOUR_XR_SERVER_USER
 ```
 

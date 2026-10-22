@@ -1,4 +1,4 @@
-.TH LIGHTXR 8 "2026-10-20" "de-xr" "System Administration"
+.TH LIGHTXR 8 "2026-10-21" "de-xr" "System Administration"
 .SH NAME
 lightxr \- display manager with a local and OpenXR login greeter
 .SH SYNOPSIS
@@ -6,7 +6,7 @@ lightxr \- display manager with a local and OpenXR login greeter
 lightxr [OPTIONS]
 .fi
 .SH DESCRIPTION
-A LightDM fork that authenticates through PAM and launches desktop sessions, including DomeD. Its Qt greeter uses a separate OpenXR presenter. A privileged broker connects the greeter to already\-running trusted XR runtimes. Authentication remains in the display manager. Installation and service activation are separate operations.
+A LightDM fork that authenticates through PAM and launches desktop sessions, including DomeD. Its native greeter (FLTK by default, Qt6 at build time) uses a separate OpenXR presenter. A privileged broker connects the greeter to already\-running trusted XR runtimes. Authentication remains in the display manager. Installation and service activation are separate operations.
 .SH OPTIONS
 .TP
 .B "\-\-config FILE"

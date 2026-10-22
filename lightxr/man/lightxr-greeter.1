@@ -1,4 +1,4 @@
-.TH LIGHTXR-GREETER 1 "2026-10-20" "de-xr" "User Commands"
+.TH LIGHTXR-GREETER 1 "2026-10-21" "de-xr" "User Commands"
 .SH NAME
 lightxr\-greeter \- local and OpenXR display\-manager greeter
 .SH SYNOPSIS
@@ -6,7 +6,7 @@ lightxr\-greeter \- local and OpenXR display\-manager greeter
 /usr/local/libexec/lightxr/lightxr\-greeter [OPTIONS]
 .fi
 .SH DESCRIPTION
-Show the Qt login interface. In production the display manager supplies the authentication channel. The broker and presenter provide a curved XR panel about two metres ahead, controller pointing and an on\-screen keyboard.
+Show the native login interface. FLTK 1.4.5 is the default build; Qt6 is selected explicitly with CMake -DDE_XR_TOOLKIT=Qt6. In production the display manager supplies the authentication channel. The broker and presenter provide a curved XR panel about two metres ahead, controller pointing and an on\-screen keyboard.
 .SH OPTIONS
 .TP
 .B "\-\-demo"
@@ -20,6 +20,14 @@ Select the seat broker socket; default /run/lightxr\-broker/bridge.sock.
 .TP
 .B "\-\-help"
 Show options.
+.TP
+.B "\-\-screenshot FILE"
+FLTK diagnostic: write a PPM image of the greeter and exit. Implies demo mode;
+no credentials are submitted. Requires a graphical display.
+.SH FILES
+The default FLTK build loads GNU Unifont from
+/usr/local/share/lightxr/fonts/unifont-17.0.04.pcf, with a source-tree fallback
+for local development. The Qt6 alternative embeds its font resource.
 .SH EXAMPLES
 \&./build/lightxr\-greeter \-\-demo \-\-windowed
 .SH SEE ALSO

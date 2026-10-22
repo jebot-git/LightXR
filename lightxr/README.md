@@ -1,6 +1,7 @@
 # LightXR
 
-LightXR is a separate LightDM fork with a Qt greeter, a root-owned seat broker and
+LightXR is a separate LightDM fork with an FLTK greeter (Qt6 is an explicit
+build option), a root-owned seat broker and
 an unprivileged native OpenXR presenter. DomeD is the preset user session. The
 existing LightDM/PAM authentication and logind session machinery remain in use;
 the XR presenter never authenticates a user or receives the PAM connection.
@@ -12,14 +13,28 @@ WiVRn-Pro revision inspected during implementation.
 Ubuntu/Debian development dependencies:
 
 ```sh
-sudo apt install build-essential cmake ninja-build pkg-config qt6-base-dev \
+sudo apt install build-essential cmake ninja-build pkg-config libfontconfig1-dev libfreetype-dev \
   libglib2.0-dev libxcb1-dev libxdmcp-dev libx11-dev libxklavier-dev \
   libpam0g-dev libgcrypt20-dev libopenxr-dev libegl-dev libgl-dev \
   desktop-file-utils python3
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+export DE_XR_FLTK_PREFIX=/path/to/patched-fltk-1.4.5
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$DE_XR_FLTK_PREFIX"
 cmake --build build --parallel 4
 ctest --test-dir build --output-on-failure
 ./build/lightxr-greeter --demo --windowed
+```
+
+The default build requires the shared patched FLTK **1.4.5** prefix; an older
+system FLTK is not interchangeable. Keep that runtime available to the installed
+greeter. The build links Fontconfig and FreeType. Qt is not required by the FLTK
+greeter or its native presenter. To opt into the retained Qt6 implementation,
+install Qt6 Widgets/Network/Test development files and configure a separate tree:
+
+```sh
+cmake -S . -B build-qt6 -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DDE_XR_TOOLKIT=Qt6
+cmake --build build-qt6 --parallel 4
 ```
 
 `--demo` renders a preview with authentication disabled. Production authentication
@@ -58,7 +73,8 @@ configured providers and MFA. Adapt it to the distribution before installation
 elsewhere. Guest login and automatic login are disabled.
 
 ```sh
-./lightxr/stage.sh
+./lightxr/stage.sh -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_PREFIX_PATH="$DE_XR_FLTK_PREFIX"
 sudo ./lightxr/install-system.sh --xr-user YOUR_XR_SERVER_USER
 # After reviewing the install and when ready for the next boot:
 sudo systemctl enable lightxr.service --force
@@ -135,7 +151,13 @@ python3 lightxr/tests/test_xr.py --build build \
   --runtime-socket wivrn/comp_ipc
 ```
 
-The tests cover the real liblightdm wire protocol, authentication gating,
+The CMake suite covers broker/session policy, channel framing and cylinder
+geometry. Its `greeter-protocol` Qt Test target is only built with
+`DE_XR_TOOLKIT=Qt6`; do not treat that target as FLTK coverage. The shared FLTK
+experiment's fake-daemon tests separately exercise the FLTK wire protocol.
+
+The existing protocol and integration tests cover the real liblightdm wire
+protocol, authentication gating,
 multiple PAM prompts, masked secret entry, cancellation, failed authentication,
 DomeD handoff, actual installed launcher/supervisor environment, Linux VT/PAM terminal, local keys, XR mouse/key input, broker peer authorization, frame
 bounds, malformed packets, input restrictions, helper reaping, and curved-panel
@@ -157,7 +179,10 @@ wordmark information are in `assets/README.md`.
 
 The local and XR greeter use the bundled GNU Unifont 17.0.04 bitmap face at its
 native 16 px strike, including account fields, prompts, buttons and the on-screen
-keyboard. The font is embedded in the greeter, so it does not depend on a user's
-DomeD session, Fontconfig settings or home directory. Text is not resized or
+keyboard. The FLTK greeter loads the installed font from
+`/usr/local/share/lightxr/fonts/unifont-17.0.04.pcf` (or the source-tree fallback
+when developing). Keep that file with the installation. The Qt6 alternative
+embeds the font as a resource. Neither requires a user's home font collection.
+Text is not resized or
 synthetically emboldened. Font licensing and provenance are installed in the
 LightXR documentation's `fonts` directory.
