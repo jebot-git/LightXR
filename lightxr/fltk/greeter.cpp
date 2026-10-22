@@ -676,6 +676,7 @@ public:
   }
 };
 int main(int argc, char **argv) try {
+  setenv("DE_XR_LIGHTXR_PCF", "1", 1);
   bool demo = false, windowed = false;
   std::string endpoint = "/run/lightxr-broker/bridge.sock", screenshot;
   for (int i = 1; i < argc; ++i) {
@@ -702,7 +703,8 @@ int main(int argc, char **argv) try {
   Greeter window(demo, endpoint);
   FL_NORMAL_SIZE = dx::size;
   fl_message_font(dx::font, dx::size);
-  dx::init();
+  // Login uses its own PCF and does not consume a user session appearance.
+  Fl::visual(FL_RGB);
   dx::style(&window);
   window.show();
   if (!windowed)
