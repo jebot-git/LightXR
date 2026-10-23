@@ -28,6 +28,8 @@ cmake --build build
 The demo previews the interface without authentication. Production uses
 `lightxr` (the display manager), `lightxr-greeter` (FLTK UI by default),
 `lightxr-presenter` (OpenXR) and `lightxr-broker.py` (trusted runtime bridge).
+The physical greeter runs in Cage on a native Wayland DRM/libinput seat;
+install the `cage` runtime package. Xorg is not required.
 
 ## System installation
 
@@ -38,6 +40,10 @@ Install DomeD first, then follow the full guide to prepare and validate the stag
   -DCMAKE_PREFIX_PATH="$DE_XR_FLTK_PREFIX"
 sudo ./lightxr/install-system.sh --xr-user YOUR_XR_SERVER_USER
 ```
+
+The PAM stack is selected automatically: Fedora uses authselect's
+`password-auth` and `postlogin`; Debian uses the `common-*` stacks. Set
+`-DLIGHTXR_PAM_STACK=fedora` or `debian` to override detection.
 
 The daemon installs under `/usr/local/sbin`, greeter/presenter/broker under
 `/usr/local/libexec/lightxr`, and configuration under `/etc/lightxr`.

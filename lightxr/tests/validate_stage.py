@@ -5,7 +5,7 @@ from pathlib import Path
 root=Path(sys.argv[1]).resolve()
 prefix=root/'usr/local'
 required=['sbin/lightxr','libexec/lightxr/lightxr-greeter','libexec/lightxr/lightxr-presenter',
-          'libexec/lightxr/lightxr-broker.py','libexec/lightxr/lightxr-session',
+          'libexec/lightxr/lightxr-broker.py','libexec/lightxr/lightxr-session','libexec/lightxr/lightxr-wayland',
           'share/xgreeters/lightxr.desktop',
           'lib/systemd/system/lightxr.service','lib/systemd/system/lightxr-broker.service',
           'lib/sysusers.d/lightxr.conf','lib/tmpfiles.d/lightxr.conf']
@@ -21,10 +21,19 @@ for name in required:
 conf=configparser.ConfigParser(interpolation=None);conf.read(root/'etc/lightxr/lightdm.conf')
 assert (root/'etc/dbus-1/system.d/lightxr.conf').is_file(), 'System D-Bus must load the display-manager policy even with a /usr/local prefix'
 assert conf['Seat:*']['user-session']=='dome' and conf['Seat:*']['greeter-session']=='lightxr'
-assert conf['Seat:*']['greeter-user']=='lightxr' and conf['Seat:*']['allow-guest']=='false'
+assert conf['LightDM']['greeter-user']=='lightxr' and conf['Seat:*']['allow-guest']=='false'
+assert 'xserver-command' not in conf['Seat:*']
+desktop=configparser.ConfigParser(interpolation=None);desktop.read(prefix/'share/xgreeters/lightxr.desktop')
+assert desktop['Desktop Entry']['X-LightDM-Session-Type']=='wayland'
+assert desktop['Desktop Entry']['Exec']=='/usr/local/libexec/lightxr/lightxr-wayland'
+launcher=(prefix/'libexec/lightxr/lightxr-wayland').read_text()
+assert 'FLTK_BACKEND=wayland' in launcher and 'WLR_BACKENDS=drm,libinput' in launcher
+assert 'LIBSEAT_BACKEND=logind' in launcher and '/usr/bin/cage -s -- ' in launcher
 assert conf['Seat:*']['pam-service']=='lightxr' and 'autologin-user' not in conf['Seat:*']
 assert 'pam_permit.so' not in (root/'etc/pam.d/lightxr').read_text()
-assert '@include common-auth' in (root/'etc/pam.d/lightxr').read_text()
+pam = (root/'etc/pam.d/lightxr').read_text()
+assert '@include common-auth' in pam or ('substack      password-auth' in pam and 'include       postlogin' in pam)
+assert 'pam_succeed_if.so user != root' in pam
 assert (root/'etc/pam.d/lightxr-greeter').is_file()
 assert isinstance(json.loads((root/'etc/lightxr/broker.json').read_text())['allow_users'],list)
 for name in ['lightxr.service','lightxr-broker.service']:

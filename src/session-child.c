@@ -499,6 +499,21 @@ session_child_run (int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
+    /* Authentication starts on the greeter's display. The desktop can be
+     * assigned a different VT afterwards; pam_systemd must see that final
+     * terminal together with XDG_VTNR when it registers the new session. */
+    result = pam_set_item (pam_handle, PAM_TTY, xdisplay ? xdisplay : tty);
+#ifdef PAM_XDISPLAY
+    if (result == PAM_SUCCESS)
+        result = pam_set_item (pam_handle, PAM_XDISPLAY, xdisplay);
+#endif
+    if (result != PAM_SUCCESS)
+    {
+        g_printerr ("Failed to update PAM session display: %s\n", pam_strerror (pam_handle, result));
+        pam_end (pam_handle, 0);
+        return EXIT_FAILURE;
+    }
+
     /* Redirect stderr to a log file */
     if (log_filename)
     {

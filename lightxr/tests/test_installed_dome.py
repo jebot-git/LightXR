@@ -21,7 +21,7 @@ with tempfile.TemporaryDirectory(prefix='lightxr-dome-contract-') as directory:
     runtime=temp/'runtime';runtime.mkdir(mode=0o700)
     home=temp/'home';home.mkdir()
     recorder=temp/'compositor-recorder'
-    recorder.write_text('#!/usr/bin/python3\nimport json,os,sys\nfrom pathlib import Path\nkeys=["XDG_RUNTIME_DIR","XDG_CURRENT_DESKTOP","XDG_SESSION_DESKTOP","XDG_SESSION_TYPE","XDG_SEAT","XDG_VTNR","XDG_SEAT_PATH","XDG_SESSION_PATH","DBUS_SESSION_BUS_ADDRESS","DISPLAY","WAYLAND_DISPLAY","WAYLAND_SOCKET","DOME_LOGIN_SESSION","DOME_BACKEND","LIBSEAT_BACKEND","DOME_START_XR","DOME_TERMINAL","DOME_TERMINAL_MODE","QT_QPA_PLATFORM","QT_IM_MODULE","GTK_IM_MODULE","XMODIFIERS","PAM_KWALLET5_LOGIN"]\nPath(os.environ["LIGHTXR_DOME_CONTRACT"]).write_text(json.dumps({"argv":sys.argv[1:],"env":{k:os.environ.get(k) for k in keys}}))\n')
+    recorder.write_text('#!/usr/bin/python3\nimport json,os,sys\nfrom pathlib import Path\nkeys=["XDG_RUNTIME_DIR","XDG_CURRENT_DESKTOP","XDG_SESSION_DESKTOP","XDG_SESSION_TYPE","XDG_SEAT","XDG_VTNR","XDG_SEAT_PATH","XDG_SESSION_PATH","DBUS_SESSION_BUS_ADDRESS","DISPLAY","WAYLAND_DISPLAY","WAYLAND_SOCKET","DOME_LOGIN_SESSION","DOME_BACKEND","LIBSEAT_BACKEND","DOME_START_XR","DOME_TERMINAL","DOME_TERMINAL_BACKEND","DOME_TERMINAL_MODE","QT_QPA_PLATFORM","QT_IM_MODULE","GTK_IM_MODULE","XMODIFIERS","PAM_KWALLET5_LOGIN"]\nPath(os.environ["LIGHTXR_DOME_CONTRACT"]).write_text(json.dumps({"argv":sys.argv[1:],"env":{k:os.environ.get(k) for k in keys}}))\n')
     recorder.chmod(0o755)
     baseline={'PATH':'/usr/local/bin:/usr/bin:/bin','LANG':'C.UTF-8','HOME':str(home),
               'XDG_RUNTIME_DIR':str(runtime),'XDG_CONFIG_HOME':str(temp/'config'),'XDG_STATE_HOME':str(temp/'state'),
@@ -42,7 +42,7 @@ with tempfile.TemporaryDirectory(prefix='lightxr-dome-contract-') as directory:
         expected={'XDG_RUNTIME_DIR':str(runtime),'XDG_CURRENT_DESKTOP':'Dome','XDG_SESSION_DESKTOP':'dome','XDG_SESSION_TYPE':'wayland',
                   'XDG_SEAT':'seat0','XDG_VTNR':'9','XDG_SEAT_PATH':baseline['XDG_SEAT_PATH'],'XDG_SESSION_PATH':baseline['XDG_SESSION_PATH'],
                   'DOME_LOGIN_SESSION':'1','DOME_BACKEND':'drm','LIBSEAT_BACKEND':'logind',
-                  'DOME_START_XR':overrides.get('DOME_START_XR','1'),'DOME_TERMINAL':'/usr/local/bin/ghostty-xr-launch',
+                  'DOME_START_XR':overrides.get('DOME_START_XR','1'),'DOME_TERMINAL':overrides.get('DOME_TERMINAL'),'DOME_TERMINAL_BACKEND':overrides.get('DOME_TERMINAL_BACKEND','auto'),
                   'DOME_TERMINAL_MODE':overrides.get('DOME_TERMINAL_MODE','overlay'),'QT_QPA_PLATFORM':'wayland',
                   'QT_IM_MODULE':'wayland','GTK_IM_MODULE':'fcitx','XMODIFIERS':'@im=fcitx','PAM_KWALLET5_LOGIN':baseline['PAM_KWALLET5_LOGIN']}
         for key,expected_value in expected.items():assert e[key]==expected_value,(name,key,e[key],expected_value)

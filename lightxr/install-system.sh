@@ -18,7 +18,7 @@ done
 [[ -n "$xr_user" && "$xr_user" != root ]] || { echo 'Specify the trusted XR server owner with --xr-user USER.' >&2; exit 1; }
 getent passwd "$xr_user" >/dev/null
 [[ -f /usr/share/wayland-sessions/dome.desktop && -x /usr/local/bin/dome-session && -x /usr/local/bin/dome-compositor ]] || { echo 'Install DomeD first.' >&2; exit 1; }
-command -v Xorg >/dev/null || { echo 'Install xserver-xorg-core and xserver-xorg-input-libinput first.' >&2; exit 1; }
+command -v cage >/dev/null || { echo 'Install Cage (Wayland kiosk compositor), its wlroots runtime and libpam-systemd first.' >&2; exit 1; }
 python3 "$root/lightxr/tests/validate_stage.py" "$stage"
 exec 9>/run/lock/lightxr-install.lock
 flock -x 9

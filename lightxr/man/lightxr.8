@@ -7,6 +7,8 @@ lightxr [OPTIONS]
 .fi
 .SH DESCRIPTION
 A LightDM fork that authenticates through PAM and launches desktop sessions, including DomeD. Its native greeter (FLTK by default, Qt6 at build time) uses a separate OpenXR presenter. A privileged broker connects the greeter to already\-running trusted XR runtimes. Authentication remains in the display manager. Installation and service activation are separate operations.
+.PP
+The physical greeter runs under Cage on Wayland using DRM, libinput and logind. Xorg and Xwayland are not required. The lightxr\-wayland launcher selects native Wayland and allows VT switching; the authenticated desktop starts in its own session.
 .SH OPTIONS
 .TP
 .B "\-\-config FILE"

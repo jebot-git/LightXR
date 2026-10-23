@@ -246,12 +246,19 @@ class Greeter : public dx::GpuWindow {
         Fl::e_is_click = isclick;
       }
     } saved;
-    int mods = j.value("modifiers", 0);
+    int mods = j.value("modifiers", j.value("mods", 0));
     Fl::e_state = ((mods & 0x02000000) ? FL_SHIFT : 0) |
                   ((mods & 0x04000000) ? FL_CTRL : 0) |
                   ((mods & 0x08000000) ? FL_ALT : 0) |
                   ((mods & 0x10000000) ? FL_META : 0);
     if (type == "key") {
+      // A headset-only seat may never receive a native keyboard-enter event.
+      // Establish FLTK focus before dispatching the broker's keyboard input.
+      if (!contains(Fl::focus())) {
+        Fl::handle(FL_FOCUS, this);
+        if (target->active())
+          target->take_focus();
+      }
       int key = j.value("key", 0);
       auto text = j.value("text", std::string());
       if (key >= 0x01000030 && key <= 0x01000052)
@@ -308,6 +315,17 @@ class Greeter : public dx::GpuWindow {
         }
       if (!key && !text.empty())
         key = (unsigned char)text[0];
+      // Wayland's compose handler needs the control character as well as the
+      // keysym. Empty text would consume Enter/Backspace as a text edit.
+      if (text.empty()) {
+        switch (key) {
+        case FL_Enter: text = "\r"; break;
+        case FL_Tab: text = "\t"; break;
+        case FL_BackSpace: text = "\b"; break;
+        case FL_Delete: text = "\177"; break;
+        case FL_Escape: text = "\033"; break;
+        }
+      }
       if (key >= 'A' && key <= 'Z')
         key += 'a' - 'A';
       Fl::e_keysym = Fl::e_original_keysym = key;
@@ -706,9 +724,13 @@ int main(int argc, char **argv) try {
   // Login uses its own PCF and does not consume a user session appearance.
   Fl::visual(FL_RGB);
   dx::style(&window);
-  window.show();
+  // Let the compositor configure the initial fullscreen geometry before
+  // requesting widget focus after the first exposure.
   if (!windowed)
     window.fullscreen();
+  window.show();
+  window.wait_for_expose();
+  window.take_focus();
   if (!screenshot.empty()) {
     Fl::check();
     return dx::screenshot(window, screenshot.c_str()) ? 0 : 1;

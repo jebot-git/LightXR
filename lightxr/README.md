@@ -65,12 +65,19 @@ explicitly so DomeD's restrictive session umask cannot prevent the greeter accou
 from starting. On Ubuntu it also exposes the distribution's PAM KWallet helper at
 the libexec path used by older installed DomeD launchers.
 
-The runtime needs `xserver-xorg-core`, `xserver-xorg-input-libinput` and
-`libpam-systemd` for the greeter's physical seat and DomeD installed
-at `/usr/local/bin/dome-session`. DomeD itself runs as a Wayland user session.
-The PAM policy supplied here targets Debian/Ubuntu's `common-*` stack, including
-configured providers and MFA. Adapt it to the distribution before installation
-elsewhere. Guest login and automatic login are disabled.
+The runtime needs `cage` (and its wlroots dependencies) and `libpam-systemd`
+for the greeter's physical seat, and DomeD installed at `/usr/local/bin/dome-session`.
+The greeter desktop entry uses `X-LightDM-Session-Type=wayland` and launches
+`lightxr-wayland`: an unprivileged Cage kiosk with native DRM/libinput and
+logind seat access. Its FLTK client uses Wayland exclusively; inherited display
+variables are cleared and no Xorg or Xwayland server is required. Cage manages
+the window size and input focus and allows normal VT switching (`-s`). The
+authenticated DomeD desktop starts separately on its own Wayland seat session.
+The PAM policy is selected automatically: Fedora uses authselect's `password-auth`
+and `postlogin`, while Debian/Ubuntu uses the `common-*` stack, including configured
+providers and MFA. Set `-DLIGHTXR_PAM_STACK=fedora` or `debian` to override detection.
+Review the policy before installing on another distribution. Guest login and
+automatic login are disabled.
 
 ```sh
 ./lightxr/stage.sh -DCMAKE_BUILD_TYPE=Release \
@@ -84,8 +91,8 @@ The installer does not restart or stop the current display manager. Its optional
 `--enable-next-boot` flag performs the final enable command above. Existing files
 are backed up under `/var/backups/lightxr/`. To roll back before reboot, re-enable
 the previous display-manager service with `--force` (for this host, `sddm.service`).
-Keep a working TTY available for the first real login test. The first deployment
-has not been activated automatically.
+Keep a working TTY available for the first real login test. Activation is always
+an explicit administrator action.
 
 The installed daemon is `lightxr`; its session worker re-executes `/proc/self/exe`
 so another `lightdm` on PATH cannot be substituted. Its PAM services, pid file,
@@ -152,9 +159,14 @@ python3 lightxr/tests/test_xr.py --build build \
 ```
 
 The CMake suite covers broker/session policy, channel framing and cylinder
-geometry. Its `greeter-protocol` Qt Test target is only built with
-`DE_XR_TOOLKIT=Qt6`; do not treat that target as FLTK coverage. The shared FLTK
-experiment's fake-daemon tests separately exercise the FLTK wire protocol.
+geometry. The FLTK `fltk-wayland-protocol` test runs the real greeter under Cage's
+headless backend with X11 unavailable, checking the daemon protocol, secret
+response, retry, XR control keys/modifiers and frame export. It skips if Cage is
+not installed. `pam-session-handoff` runs the real session worker unprivileged
+with a test-only PAM probe that rejects opening a session; it checks final
+PAM_TTY/PAM_XDISPLAY metadata after a VT change. No actual login or credentials
+are used by either fixture. The separate `greeter-protocol` Qt Test target is
+only built with `DE_XR_TOOLKIT=Qt6`.
 
 The existing protocol and integration tests cover the real liblightdm wire
 protocol, authentication gating,
@@ -163,9 +175,12 @@ DomeD handoff, actual installed launcher/supervisor environment, Linux VT/PAM te
 bounds, malformed packets, input restrictions, helper reaping, and curved-panel
 hit geometry. `test_xr.py` runs the actual greeter→broker→native presenter path
 and records submitted cylinder frames. On this development host it passed with
-Monado's simulated headset. A real headset's appearance, controller focus and a
-real privileged console/PAM login still need deployment validation; simulation
-is not evidence of those device- and seat-specific behaviors.
+Monado's simulated headset. On 2026-10-23, the FLTK/Cage DRM greeter accepted
+physical keyboard input and completed a privileged Fedora/Nobara PAM login into
+DomeD. Logind registered an active Wayland user session on its new VT, and the
+DomeD compositor, XR process and tray started successfully. This does not verify
+a real headset's greeter appearance or controller focus; those still need
+separate device validation.
 
 ## Licensing
 

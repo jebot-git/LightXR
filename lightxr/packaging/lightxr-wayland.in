@@ -1,0 +1,12 @@
+#!/bin/sh
+# The greeter owns a native Wayland seat. Never inherit another display or
+# silently fall back to an X11/nested backend. PAM provides its runtime dir/VT.
+set -eu
+unset DISPLAY WAYLAND_DISPLAY WAYLAND_SOCKET XAUTHORITY
+export XDG_SESSION_TYPE=wayland
+export FLTK_BACKEND=wayland
+export WLR_BACKENDS=drm,libinput
+export LIBSEAT_BACKEND=logind
+# Cage can advertise an optional Xwayland display; the greeter and its helpers
+# must use only the native Wayland connection it supplies.
+exec /usr/bin/cage -s -- /usr/bin/env -u DISPLAY GDK_BACKEND=wayland QT_QPA_PLATFORM=wayland "@CMAKE_INSTALL_FULL_LIBEXECDIR@/lightxr/lightxr-greeter"

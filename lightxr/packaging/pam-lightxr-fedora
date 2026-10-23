@@ -1,0 +1,18 @@
+#%PAM-1.0
+# Use Fedora's authselect-managed policy, including any configured MFA provider.
+auth       requisite     pam_nologin.so
+auth       required      pam_succeed_if.so user != root quiet_success
+auth       substack      password-auth
+-auth      optional      pam_kwallet5.so
+auth       include       postlogin
+account    required      pam_nologin.so
+account    include       password-auth
+password   include       password-auth
+session    required      pam_selinux.so close
+session    required      pam_loginuid.so
+session    required      pam_selinux.so open
+session    optional      pam_keyinit.so force revoke
+session    required      pam_namespace.so
+session    include       password-auth
+-session   optional      pam_kwallet5.so auto_start
+session    include       postlogin
