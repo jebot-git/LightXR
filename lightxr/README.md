@@ -155,7 +155,9 @@ handled by the compositor, presenter or runtime broker.
 
 Greeter frames are rendered into a fixed 1280x800 OpenGL target before transport;
 this preserves bitmap cells independently of the physical monitor's size/DPI
-and avoids black captures from trying to print a GL window into a CPU surface.
+and avoids black captures from trying to print a GL window into a CPU surface. The installed greeter retains the configured FLTK runtime search path;
+stage validation clears `LD_LIBRARY_PATH` when checking its dependencies, matching
+the dedicated account's clean boot environment.
 The native presenter uploads that frame on the GPU at the same 2m cylinder.
 
 ### Privilege boundary

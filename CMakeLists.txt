@@ -47,6 +47,9 @@ target_link_libraries(lightxr-client PUBLIC lightxr-common PkgConfig::XKL)
 if(DE_XR_TOOLKIT STREQUAL "FLTK")
  add_executable(lightxr-greeter lightxr/fltk/greeter.cpp)
  target_link_libraries(lightxr-greeter PRIVATE lightxr-client fltk::gl-shared fltk::fltk-shared fltk::images-shared PkgConfig::FONTCONFIG)
+ # Display-manager accounts run with a clean environment, without a developer's
+ # LD_LIBRARY_PATH. Preserve the configured shared toolkit path on installation.
+ set_target_properties(lightxr-greeter PROPERTIES INSTALL_RPATH "$<TARGET_FILE_DIR:fltk::fltk-shared>;$<TARGET_FILE_DIR:fltk::gl-shared>;$<TARGET_FILE_DIR:fltk::images-shared>" INSTALL_RPATH_USE_LINK_PATH TRUE)
  target_compile_definitions(lightxr-greeter PRIVATE LIGHTXR_BITMAP_FONT="${CMAKE_CURRENT_SOURCE_DIR}/lightxr/assets/fonts/unifont-17.0.04.pcf" LIGHTXR_INSTALLED_BITMAP_FONT="${CMAKE_INSTALL_FULL_DATADIR}/lightxr/fonts/unifont-17.0.04.pcf")
  target_compile_definitions(lightxr-greeter PRIVATE LIGHTXR_CLOCK_FONT="${CMAKE_CURRENT_SOURCE_DIR}/lightxr/assets/fonts/x14y24pxHeadUpDaisy.bdf" LIGHTXR_INSTALLED_CLOCK_FONT="${CMAKE_INSTALL_FULL_DATADIR}/lightxr/fonts/x14y24pxHeadUpDaisy.bdf")
  add_executable(lightxr-presenter lightxr/fltk/presenter.cpp lightxr/src/graphics.cpp)

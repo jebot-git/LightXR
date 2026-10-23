@@ -18,6 +18,8 @@ for name in required:
     while root==Path('/') and parent!=root:
         assert parent.stat().st_mode&0o005==0o005, f'Greeter cannot traverse {parent}'
         parent=parent.parent
+loader=subprocess.run(['/usr/bin/env','-u','LD_LIBRARY_PATH','ldd',str(prefix/'libexec/lightxr/lightxr-greeter')],text=True,capture_output=True,check=True)
+assert 'not found' not in loader.stdout, 'Greeter dependencies must resolve without inherited LD_LIBRARY_PATH: '+loader.stdout
 conf=configparser.ConfigParser(interpolation=None);conf.read(root/'etc/lightxr/lightdm.conf')
 assert (root/'etc/dbus-1/system.d/lightxr.conf').is_file(), 'System D-Bus must load the display-manager policy even with a /usr/local prefix'
 assert conf['Seat:*']['user-session']=='dome' and conf['Seat:*']['greeter-session']=='lightxr'
