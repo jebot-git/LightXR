@@ -46,3 +46,14 @@ Show options.
 lightxr.service runs the display manager; lightxr\-broker.service runs the trusted\-runtime broker. Review the distribution\-specific PAM policy and installation guide before selecting LightXR as the next\-boot display manager.
 .SH SEE ALSO
 lightxr\-greeter(1), dome\-compositor(1), pam(8)
+
+.SH BOOT XR RUNTIME
+Pass --xr-service wivrn-pro.service to the installer with --xr-user USER to enable
+the trusted owner's existing user service and lingering. The broker orders itself
+after that user manager and retries headset attachment. No running XR server,
+desktop session or display manager is restarted by installation.
+.SH SESSION LOCKING
+The matching DomeD compositor exposes the ScreenSaver Lock method, shields its
+monitor and XR content/input, and invokes LightXR's PAM-backed session lock.
+Only the logind authority's Unlock signal releases the shield. The greeter shows
+UNIX time in 2x HeadUpDaisy before authentication.

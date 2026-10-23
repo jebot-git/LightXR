@@ -43,6 +43,12 @@ assert 'RuntimeDirectory=lightxr-broker\n' in (prefix/'lib/systemd/system/lightx
 assert 'RuntimeDirectory=lightxr\n' in (prefix/'lib/systemd/system/lightxr.service').read_text()
 assert '/usr/share/wayland-sessions' in conf['LightDM']['sessions-directory']
 assert not (prefix/'share/lightxr/sessions/dome.desktop').exists(), 'Must not shadow installed DomeD entry'
+clock=prefix/'share/lightxr/fonts/x14y24pxHeadUpDaisy.bdf'
+provenance=json.loads((prefix/'share/doc/LightXR/fonts/HeadUpDaisy.provenance.json').read_text())
+import hashlib
+assert hashlib.sha256(clock.read_bytes()).hexdigest()==provenance['files'][clock.name]
+assert b'PIXEL_SIZE 24' in clock.read_bytes()
+assert (prefix/'share/doc/LightXR/fonts/LICENSE.HeadUpDaisy.html').is_file()
 for name in ['share/xgreeters/lightxr.desktop']:
     subprocess.run(['desktop-file-validate',str(prefix/name)],check=True)
 print('PASS: staged executables, DomeD default, distinct runtime directories, disabled guest/autologin, PAM policy and desktop files')

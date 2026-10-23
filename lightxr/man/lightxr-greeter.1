@@ -32,3 +32,14 @@ for local development. The Qt6 alternative embeds its font resource.
 \&./build/lightxr\-greeter \-\-demo \-\-windowed
 .SH SEE ALSO
 lightxr(8)
+
+.SH LOCK SCREEN
+LightDM's lock-screen hint displays UNIX seconds in HeadUpDaisy's native 24-pixel
+bitmap at exactly 2x scale. A key or click reveals PAM authentication and is
+consumed. The selected account cannot be edited while unlocking.
+.TP
+.B --lock-preview
+Preview the lock clock with authentication disabled; combine with --windowed.
+.PP
+The clock BDF and its upstream license are installed independently of user fonts.
+The same fixed 1280x800 GPU canvas is sent to the headset regardless of monitor size.

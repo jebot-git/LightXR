@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+#define GL_GLEXT_PROTOTYPES
 extern "C" {
 #include <lightdm.h>
 }
 #include "appearance.h"
 #include "gpu-window.h"
+#include "lock-cover.h"
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Double_Window.H>
@@ -48,7 +50,9 @@ class Greeter : public dx::GpuWindow {
   Fl_Input *target = &username;
   std::vector<Fl_Button *> keys;
   std::map<Fl_Button *, std::string> keyBases;
-  bool shifted = false;
+  bool shifted = false, lockMode = false;
+  LockCover *cover = nullptr;
+  std::time_t clockSecond = 0;
   bool frameDirty = true;
   std::chrono::steady_clock::time_point lastFrame{};
   bool remoteDown = false, remoteVisible = false;
@@ -63,6 +67,10 @@ class Greeter : public dx::GpuWindow {
     auto s = (Greeter *)p;
     for (int n = 0; n < 16 && g_main_context_pending(nullptr); ++n)
       g_main_context_iteration(nullptr, FALSE);
+    auto second = std::time(nullptr);
+    if (s->cover && s->cover->visible() && second != s->clockSecond) {
+      s->clockSecond = second; s->cover->redraw(); s->frameDirty = true;
+    }
     s->pump();
     Fl::repeat_timeout(.1, tick, p);
   }
@@ -71,6 +79,13 @@ class Greeter : public dx::GpuWindow {
     frameDirty = true;
   }
   void clear() { answer.value(""); }
+  void lockState(bool locked) {
+    lockMode = locked;
+    username.readonly(locked);
+    if (locked) { session.hide(); cover->show(); cover->take_focus(); }
+    else { session.show(); cover->hide(); }
+    frameDirty = true; redraw();
+  }
   void idle(const std::string &text) {
     prompts.clear();
     clear();
@@ -78,9 +93,9 @@ class Greeter : public dx::GpuWindow {
     username.activate();
     answer.deactivate();
     submit.activate();
-    submit.label("Sign in");
+    submit.label(lockMode ? "Unlock" : "Sign in");
     target = &username;
-    username.take_focus();
+    if (cover && cover->visible()) cover->take_focus(); else username.take_focus();
     status(text);
   }
   void showPrompt() {
@@ -226,6 +241,10 @@ class Greeter : public dx::GpuWindow {
   void input(const Json &j) {
     frameDirty = true;
     const auto type = j.value("type", std::string());
+    if (cover && cover->visible() && (type == "key" || type == "down")) {
+      if (j.value("pressed", true)) { cover->hide(); username.take_focus(); redraw(); }
+      return;
+    }
     struct EventState {
       int x = Fl::e_x, y = Fl::e_y, xr = Fl::e_x_root, yr = Fl::e_y_root,
           state = Fl::e_state, key = Fl::e_keysym,
@@ -396,36 +415,67 @@ class Greeter : public dx::GpuWindow {
     }
   }
   int handle(int event) override {
+    if (cover && cover->visible() && (event == FL_KEYDOWN || event == FL_PUSH)) {
+      cover->hide(); username.take_focus(); frameDirty = true; redraw();
+      return 1; // The wake event must never become a password/account character.
+    }
     int result = dx::GpuWindow::handle(event);
     if (event == FL_KEYDOWN || event == FL_PUSH || event == FL_RELEASE ||
         event == FL_DRAG || event == FL_FOCUS || event == FL_UNFOCUS)
       frameDirty = true;
     return result;
   }
+  std::vector<unsigned char> pixels() {
+    make_current();
+    // XR uses a fixed logical canvas, independently of the monitor's DPI/size.
+    // Render the same widgets into a GPU target instead of scaling a monitor
+    // capture or asking a CPU image surface to capture a GL window (black).
+    GLint previous = 0; glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previous);
+    GLuint framebuffer = 0, texture = 0;
+    glGenFramebuffers(1, &framebuffer); glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glGenTextures(1, &texture); glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, W, H, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+      throw std::runtime_error("Cannot render the fixed XR greeter canvas");
+    // FLTK's GL text cache also reads the logical window dimensions. Adjust
+    // only the base widget geometry while rendering; never resize the native
+    // Wayland window or its children for this offscreen canvas.
+    const int nativeWidth = w(), nativeHeight = h();
+    Fl_Widget::resize(x(), y(), W, H);
+    draw_begin();
+    glViewport(0, 0, W, H);
+    glMatrixMode(GL_PROJECTION); glLoadIdentity(); glOrtho(0, W, H, 0, -1, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glClearColor(17.f/255, 25.f/255, 35.f/255, 1); glClear(GL_COLOR_BUFFER_BIT);
+    Fl_Group::draw();
+    if (remoteVisible) {
+      fl_color(FL_SELECTION_COLOR); fl_line_style(FL_SOLID, 2);
+      fl_circle(remoteX, remoteY, 7);
+      fl_line(remoteX-11,remoteY,remoteX+11,remoteY);
+      fl_line(remoteX,remoteY-11,remoteX,remoteY+11); fl_line_style(0);
+    }
+    draw_end();
+    Fl_Widget::resize(x(), y(), nativeWidth, nativeHeight);
+    std::vector<unsigned char> raw(W * H * 4), result(W * H * 4);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, W, H, GL_RGBA, GL_UNSIGNED_BYTE, raw.data());
+    for (int y = 0; y < H; ++y)
+      memcpy(&result[y * W * 4], &raw[(H - 1 - y) * W * 4], W * 4);
+    glBindFramebuffer(GL_FRAMEBUFFER, previous);
+    glDeleteFramebuffers(1, &framebuffer); glDeleteTextures(1, &texture);
+    return result;
+  }
   void frame() {
     frameDirty = false;
     lastFrame = std::chrono::steady_clock::now();
-    Fl_Image_Surface surface(W, H);
-    Fl_Surface_Device::push_current(&surface);
-    surface.draw(this);
-    auto image = surface.image();
-    Fl_Surface_Device::pop_current();
-    if (!image)
-      return;
+    auto rgba = pixels();
     std::string data(9 + W * H * 4, '\0');
     data[0] = 'F';
     uint32_t width = htonl(W), height = htonl(H);
     memcpy(data.data() + 1, &width, 4);
     memcpy(data.data() + 5, &height, 4);
-    auto rgb = image->data()[0];
-    int stride = image->ld() ? image->ld() : W * image->d();
-    for (int y = 0; y < H; ++y)
-      for (int x = 0; x < W; ++x) {
-        auto d = data.data() + 9 + (y * W + x) * 4;
-        memcpy(d, rgb + y * stride + x * image->d(), 3);
-        d[3] = char(255);
-      }
-    delete image;
+    memcpy(data.data() + 9, rgba.data(), rgba.size());
     outgoing += framed(data);
   }
   void pump() {
@@ -506,7 +556,7 @@ class Greeter : public dx::GpuWindow {
   }
 
 public:
-  Greeter(bool preview, std::string endpoint)
+  Greeter(bool preview, std::string endpoint, bool previewLock = false)
       : dx::GpuWindow(W, H, "LightXR"), demo(preview),
         bridgePath(std::move(endpoint)) {
     xclass("org.domed.LightXR");
@@ -615,8 +665,11 @@ public:
           [](Fl_Widget *w, void *p) { ((Greeter *)p)->keyboard(w->label()); },
           this);
     }
+    cover = new LockCover(W, H);
+    cover->wake = [this] { cover->hide(); username.take_focus(); frameDirty = true; redraw(); };
     end();
     dx::style(this);
+    lockState(previewLock);
     if (demo)
       idle("Preview only — authentication is disabled.");
     else {
@@ -655,7 +708,8 @@ public:
       g_signal_connect(daemon, "reset",
                        G_CALLBACK(+[](LightDMGreeter *, gpointer p) {
                          auto s = (Greeter *)p;
-                         s->idle("Sign in to continue.");
+                         s->lockState(lightdm_greeter_get_lock_hint(s->daemon));
+                         s->idle(s->lockMode ? "Authenticate to unlock your session." : "Sign in to continue.");
                        }),
                        this);
       lightdm_greeter_connect_to_daemon(
@@ -665,6 +719,7 @@ public:
             GError *e = nullptr;
             s->connected = lightdm_greeter_connect_to_daemon_finish(
                 LIGHTDM_GREETER(obj), r, &e);
+            s->lockState(s->connected && lightdm_greeter_get_lock_hint(s->daemon));
             s->idle(s->connected ? "Sign in to continue."
                                  : "Display manager connection failed.");
             if (!s->connected) {
@@ -681,6 +736,13 @@ public:
     }
     Fl::add_timeout(.1, tick, this);
   }
+  bool snapshot(const std::string &path) {
+    auto rgba = pixels();
+    std::ofstream out(path, std::ios::binary);
+    out << "P6\n" << W << " " << H << "\n255\n";
+    for (size_t i = 0; i < rgba.size(); i += 4) out.write((const char *)&rgba[i], 3);
+    return bool(out);
+  }
   ~Greeter() {
     Fl::remove_timeout(tick, this);
     clear();
@@ -695,12 +757,13 @@ public:
 };
 int main(int argc, char **argv) try {
   setenv("DE_XR_LIGHTXR_PCF", "1", 1);
-  bool demo = false, windowed = false;
+  bool demo = false, windowed = false, previewLock = false;
   std::string endpoint = "/run/lightxr-broker/bridge.sock", screenshot;
   for (int i = 1; i < argc; ++i) {
     std::string a = argv[i];
     if (a == "--demo")
       demo = true;
+    else if (a == "--lock-preview") { previewLock = true; demo = true; }
     else if (a == "--windowed")
       windowed = true;
     else if (a == "--bridge" && i + 1 < argc)
@@ -709,7 +772,7 @@ int main(int argc, char **argv) try {
       screenshot = argv[++i];
       demo = true;
     } else if (a == "--help") {
-      puts("LightXR FLTK: --demo --windowed --bridge PATH --screenshot PPM");
+      puts("LightXR FLTK: --demo --lock-preview --windowed --bridge PATH --screenshot PPM");
       return 0;
     } else
       throw std::runtime_error("Unknown option: " + a);
@@ -718,7 +781,7 @@ int main(int argc, char **argv) try {
   Fl::background(17, 25, 35);
   Fl::background2(32, 47, 65);
   Fl::foreground(237, 243, 251);
-  Greeter window(demo, endpoint);
+  Greeter window(demo, endpoint, previewLock);
   FL_NORMAL_SIZE = dx::size;
   fl_message_font(dx::font, dx::size);
   // Login uses its own PCF and does not consume a user session appearance.
@@ -733,7 +796,7 @@ int main(int argc, char **argv) try {
   window.take_focus();
   if (!screenshot.empty()) {
     Fl::check();
-    return dx::screenshot(window, screenshot.c_str()) ? 0 : 1;
+    return window.snapshot(screenshot) ? 0 : 1;
   }
   return Fl::run();
 } catch (const std::exception &e) {

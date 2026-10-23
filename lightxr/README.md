@@ -82,7 +82,7 @@ automatic login are disabled.
 ```sh
 ./lightxr/stage.sh -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_PREFIX_PATH="$DE_XR_FLTK_PREFIX"
-sudo ./lightxr/install-system.sh --xr-user YOUR_XR_SERVER_USER
+sudo ./lightxr/install-system.sh --xr-user YOUR_XR_SERVER_USER --xr-service wivrn-pro.service
 # After reviewing the install and when ready for the next boot:
 sudo systemctl enable lightxr.service --force
 ```
@@ -129,6 +129,34 @@ headset reconnect paths inspected. The local WiVRn-Pro checkout was preserved.
 A pre-login XR server must already be running independently of the session being
 logged into (for example a system service or intentionally lingering user service).
 LightXR does not log a user in or start WiVRn just to display its greeter.
+
+### Boot availability and screen locking
+
+`--xr-service wivrn-pro.service` enables the trusted owner's existing user service
+and lingering, and orders the broker after that user's manager. It does not
+restart the headset server or the display manager. Detection accepts the listening
+compositor socket even when connected client entries appear first in `/proc/net/unix`.
+A headset connecting after the greeter appears is picked up by the retry loop.
+
+The FLTK greeter honors LightDM's `lock-screen` hint. Its cover displays UNIX
+seconds using the bundled 24px HeadUpDaisy bitmap at exactly 2x. A click or key
+reveals authentication and is consumed; it never becomes an account/password
+character. The selected account remains fixed and LightDM/PAM alone can unlock
+and return to the existing session. `lightxr-greeter --lock-preview --windowed`
+previews the clock with authentication disabled.
+
+DomeD's native session now exposes `org.freedesktop.ScreenSaver` at `/ScreenSaver`.
+Its Lock command requests LightXR's session lock and shields desktop and XR
+content/input while locked, including when the original VT is revisited. Only
+logind's trusted system-bus Unlock signal releases that shield after PAM.
+`SetActive(false)` cannot bypass authentication. Install the matching DomeD
+compositor and renderer before using this lock integration. No user password is
+handled by the compositor, presenter or runtime broker.
+
+Greeter frames are rendered into a fixed 1280x800 OpenGL target before transport;
+this preserves bitmap cells independently of the physical monitor's size/DPI
+and avoids black captures from trying to print a GL window into a CPU surface.
+The native presenter uploads that frame on the GPU at the same 2m cylinder.
 
 ### Privilege boundary
 

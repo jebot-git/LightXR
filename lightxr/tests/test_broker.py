@@ -34,6 +34,16 @@ class Validation(unittest.TestCase):
                       {'type':'key','key':9999999}, {'type':'key','mods':1},
                       {'type':'key','text':'x','exec':'sh'}]:
             with self.assertRaises((ValueError,TypeError)): b.validate_input(event(value))
+    def test_listener_after_connected_endpoints(self):
+        rows = """Num RefCount Protocol Flags Type St Inode Path
+0: 00000003 00000000 00000000 0001 03 1 /run/user/1000/wivrn/comp_ipc
+1: 00000002 00000000 00010000 0001 01 2 /run/user/1000/wivrn/comp_ipc
+"""
+        with patch.object(Path, 'read_text', return_value=rows):
+            self.assertTrue(b.live_socket('/run/user/1000/wivrn/comp_ipc'))
+        with patch.object(Path, 'read_text', return_value=rows.split('1:')[0]):
+            self.assertFalse(b.live_socket('/run/user/1000/wivrn/comp_ipc'))
+
     def test_discovery_owner_and_path(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory);runtime=root/str(os.getuid());runtime.mkdir(mode=0o700)

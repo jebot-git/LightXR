@@ -1,0 +1,30 @@
+{
+  "repository": "https://github.com/hicchicc/hicchicc.github.io",
+  "revision": "91451a311511ef023288f6efcdb95b72f2b43ef1",
+  "format": "BDF only; native monochrome TTF strikes or unhinted design-grid rasterization",
+  "converter": "scripts/ttf-to-bdf.py",
+  "converter_sha256": "f8a644f8f29f836ef1ce718fadde4f6fb63d20b3176ab6c9056a6e814e42c81c",
+  "files": {
+    "x14y24pxHeadUpDaisy.bdf": "1e2f8dd05b45fa28e12760a217a4663ee0b3f7789e69fafac747f232b074b98c"
+  },
+  "fonts": {
+    "x14y24pxHeadUpDaisy.bdf": {
+      "source_sha256": "c0b8c7ee9367a43d8184a65629a8bd867f68671af72678a5350f2eaed6e103b3",
+      "pixels": 24,
+      "method": "embedded monochrome strike",
+      "family": "x14y24pxHeadUpDaisy",
+      "style": "Regular",
+      "copyright": "Copyright (c) 2018, hicc",
+      "outline_supplement_codepoints": [],
+      "glyphs": 1100,
+      "all_glyphs_verified": true,
+      "sha256": "1e2f8dd05b45fa28e12760a217a4663ee0b3f7789e69fafac747f232b074b98c",
+      "source": "00ff/x14y24pxHeadUpDaisy.ttf"
+    }
+  },
+  "tool_versions": {
+    "fonttools": "4.67.0",
+    "freetype": "2.13.2"
+  },
+  "usage": "LightXR lock clock only; native 24px bitmap replicated at 2x, no outline fonts."
+}

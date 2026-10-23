@@ -7,16 +7,21 @@ root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 stage="$root/build/system-stage"
 xr_user="${SUDO_USER:-}"
 enable=false
+xr_service=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --xr-user) xr_user="$2"; shift 2;;
         --stage) stage="$2"; shift 2;;
         --enable-next-boot) enable=true; shift;;
+        --xr-service) xr_service="$2"; shift 2;;
         *) echo "Unknown option: $1" >&2; exit 2;;
     esac
 done
 [[ -n "$xr_user" && "$xr_user" != root ]] || { echo 'Specify the trusted XR server owner with --xr-user USER.' >&2; exit 1; }
 getent passwd "$xr_user" >/dev/null
+if [[ -n "$xr_service" ]]; then
+    [[ "$xr_service" =~ ^[a-zA-Z0-9_.@:-]+\.service$ ]] || { echo 'Invalid XR user service name' >&2; exit 1; }
+fi
 [[ -f /usr/share/wayland-sessions/dome.desktop && -x /usr/local/bin/dome-session && -x /usr/local/bin/dome-compositor ]] || { echo 'Install DomeD first.' >&2; exit 1; }
 command -v cage >/dev/null || { echo 'Install Cage (Wayland kiosk compositor), its wlroots runtime and libpam-systemd first.' >&2; exit 1; }
 python3 "$root/lightxr/tests/validate_stage.py" "$stage"
@@ -52,6 +57,20 @@ systemd-tmpfiles --create /usr/local/lib/tmpfiles.d/lightxr.conf
 if [[ ! -e /usr/libexec/pam_kwallet_init && -x /usr/share/libpam-kwallet-common/pam_kwallet_init ]]; then
     install -d -m 0755 /usr/libexec
     ln -s /usr/share/libpam-kwallet-common/pam_kwallet_init /usr/libexec/pam_kwallet_init
+fi
+# A trusted runtime must be independent of graphical login. This explicit
+# option enables boot availability without starting/restarting its XR server.
+if [[ -n "$xr_service" ]]; then
+    xr_uid="$(id -u "$xr_user")"
+    loginctl enable-linger "$xr_user"
+    runuser -u "$xr_user" -- env XDG_RUNTIME_DIR="/run/user/$xr_uid" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$xr_uid/bus" systemctl --user enable "$xr_service"
+    install -d -m 0755 /etc/systemd/system/lightxr-broker.service.d
+    if [[ -f /etc/systemd/system/lightxr-broker.service.d/10-xr-user.conf ]]; then
+        install -d -m 0755 "$backup/etc/systemd/system/lightxr-broker.service.d"
+        cp -a /etc/systemd/system/lightxr-broker.service.d/10-xr-user.conf "$backup/etc/systemd/system/lightxr-broker.service.d/"
+    fi
+    printf '[Unit]\nWants=user@%s.service\nAfter=user@%s.service\n' "$xr_uid" "$xr_uid" > /etc/systemd/system/lightxr-broker.service.d/10-xr-user.conf
+    chmod 0644 /etc/systemd/system/lightxr-broker.service.d/10-xr-user.conf
 fi
 systemctl reload dbus.service
 systemctl daemon-reload

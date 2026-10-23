@@ -85,7 +85,10 @@ def live_socket(endpoint):
         for line in Path('/proc/net/unix').read_text().splitlines()[1:]:
             fields = line.split(maxsplit=7)
             if len(fields) == 8 and fields[7] == str(endpoint):
-                return int(fields[3], 16) & 0x10000 != 0 and int(fields[4], 16) == 1
+                # A connected client often precedes the listener for the same
+                # pathname. Keep scanning rather than rejecting that runtime.
+                if int(fields[3], 16) & 0x10000 and int(fields[4], 16) == 1:
+                    return True
     except OSError:
         return False
     return False
@@ -251,6 +254,7 @@ class Broker:
                         del self.presenters[key]
                 for key, runtime in discovered.items():
                     if key not in self.presenters:
+                        LOG.info('Attaching XR greeter to trusted runtime owner %s at %s', runtime.user, runtime.socket)
                         p = Presenter(self, runtime)
                         self.presenters[key] = p
                         if self.latest: p.frame(self.latest)

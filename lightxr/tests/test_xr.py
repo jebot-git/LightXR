@@ -5,6 +5,7 @@ from pathlib import Path
 signal.pthread_sigmask(signal.SIG_SETMASK, [])
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--build',type=Path,default=Path(__file__).resolve().parents[2]/'build')
+p.add_argument('--lock-preview',action='store_true')
 p.add_argument('--manifest',default='/usr/share/openxr/1/openxr_monado.json')
 p.add_argument('--runtime-socket',default='monado_comp_ipc')
 p.add_argument('--output',type=Path,default=Path(__file__).resolve().parents[2]/'artifacts/xr')
@@ -22,7 +23,7 @@ with tempfile.TemporaryDirectory(prefix='lightxr-test-') as directory:
             while not endpoint.exists():
                 if broker.poll() is not None or time.monotonic()>deadline:raise AssertionError('Broker did not start')
                 time.sleep(.05)
-            greeter=subprocess.Popen([str(a.build/'lightxr-greeter'),'--demo','--windowed','--bridge',str(endpoint)],env={**os.environ,'QT_QPA_PLATFORM':'offscreen'},stdout=glog,stderr=glog);children.append(greeter)
+            greeter=subprocess.Popen([str(a.build/'lightxr-greeter'),'--demo','--windowed',*(['--lock-preview'] if a.lock_preview else []),'--bridge',str(endpoint)],env={**os.environ,'QT_QPA_PLATFORM':'offscreen'},stdout=glog,stderr=glog);children.append(greeter)
             while not report.exists():
                 if greeter.poll() is not None or broker.poll() is not None or time.monotonic()>deadline:raise AssertionError('XR report timed out; inspect '+str(a.output/'broker.log'))
                 time.sleep(.1)
