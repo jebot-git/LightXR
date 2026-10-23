@@ -249,6 +249,9 @@ class Broker:
                 for key in list(self.presenters):
                     p = self.presenters[key]
                     if key not in discovered or p.task.done():
+                        if p.task.done() and not p.task.cancelled():
+                            error = p.task.exception()
+                            if error: LOG.warning('XR presenter for %s failed: %s', p.runtime.user, error)
                         p.task.cancel()
                         await asyncio.gather(p.task, return_exceptions=True)
                         del self.presenters[key]

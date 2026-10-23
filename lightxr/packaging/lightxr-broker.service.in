@@ -16,6 +16,10 @@ ProtectSystem=strict
 ProtectHome=read-only
 PrivateTmp=yes
 NoNewPrivileges=yes
+# Keep exactly the privileges needed to inspect trusted sockets, own the bridge,
+# and drop the presenter to the runtime owner. Children lose these at setuid.
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_READ_SEARCH CAP_SETUID CAP_SETGID
+AmbientCapabilities=CAP_SETUID CAP_SETGID
 RestrictSUIDSGID=yes
 ProtectKernelTunables=yes
 ProtectKernelModules=yes

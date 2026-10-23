@@ -41,6 +41,9 @@ assert isinstance(json.loads((root/'etc/lightxr/broker.json').read_text())['allo
 for name in ['lightxr.service','lightxr-broker.service']:
     text=(prefix/'lib/systemd/system'/name).read_text()
     assert '@CMAKE_' not in text and 'ExecStart=' in text
+broker_unit=(prefix/'lib/systemd/system/lightxr-broker.service').read_text()
+assert 'AmbientCapabilities=CAP_SETUID CAP_SETGID' in broker_unit
+assert 'CapabilityBoundingSet=CAP_CHOWN CAP_DAC_READ_SEARCH CAP_SETUID CAP_SETGID' in broker_unit
 assert 'RuntimeDirectory=lightxr-broker\n' in (prefix/'lib/systemd/system/lightxr-broker.service').read_text()
 assert 'RuntimeDirectory=lightxr\n' in (prefix/'lib/systemd/system/lightxr.service').read_text()
 assert '/usr/share/wayland-sessions' in conf['LightDM']['sessions-directory']

@@ -22,6 +22,10 @@ cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_PREFIX_PATH="$DE_XR_FLTK_PREFIX"
 cmake --build build --parallel 4
 ctest --test-dir build --output-on-failure
+# Optional installed-system proof while a headset is connected and no greeter is active:
+sudo python3 lightxr/tests/test_installed_xr.py --xr-user YOUR_XR_SERVER_USER
+# This brief authentication-disabled clock preview checks the dedicated account,
+# production broker, capability-free presenter and visible headset frames.
 ./build/lightxr-greeter --demo --windowed
 ```
 
@@ -164,9 +168,11 @@ The native presenter uploads that frame on the GPU at the same 2m cylinder.
 
 The broker accepts greeter connections only from the dedicated `lightxr` UID,
 verified with `SO_PEERCRED`; its public socket is root-owned and restricted to the
-`lightxr` group. Only root-configured runtime owners receive frames. The presenter
-runs as that runtime owner with its existing groups, a clean environment, a
-system-selected runtime manifest, and one inherited private socket. It receives
+`lightxr` group. Only root-configured runtime owners receive frames. The broker's bounded capability set explicitly retains only socket ownership,
+read/traversal, and UID/GID switching privileges; ambient UID/GID capabilities
+allow that drop under the service's clean hardened environment. The presenter
+runs as that runtime owner with its existing groups, no capabilities and a clean
+environment. It uses a system-selected runtime manifest and one inherited private socket. It receives
 pixels and returns bounded pointer/key events. It cannot choose a session, submit
 a PAM verdict, issue a command, or access LightDM's authentication descriptors.
 Input and frame sizes, coordinates, event types and input rates are validated.
